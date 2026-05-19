@@ -1,8 +1,8 @@
 See https://fellrnr.com/wiki/Hypoxic_Timer for details
 
-This version has been modified to 
+This version has been modified to: 
 - work with HID - non serial - Contec CMS50E
-- work with NET8
+- work with NET8 (because I don't know how not to) 
 
 Communication protocol adapted from https://codeberg.org/klimd/pulseoxdl/src/branch/master (Copied into github at: https://github.com/icefest/pulseoxdl)
 
