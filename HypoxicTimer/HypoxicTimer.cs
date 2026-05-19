@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -528,34 +528,67 @@ namespace HypoxicTimer
             }
         }
 
+        private DateTime nextPlotTime = DateTime.MinValue;
+        private RealTimePacket lastPlottedPacket = null;
+        private Queue<RealTimePacket> uiPlotQueue = new Queue<RealTimePacket>();
+
         private void ShowPulse(List<RealTimePacket> outstanding)
         {
-            Logger.Log("Plotting pulse, outstanding " + outstanding.Count, 2);
-
             if (PulsePlotter == null)
             {
                 PulsePlotter = new Plotter(Color.Red, MAX_PULSE_POINTS, pulsePlotSurface2D);
             }
-            foreach (RealTimePacket aRealTimePacket in outstanding)
+
+            foreach (RealTimePacket p in outstanding)
             {
-                int pulseraw = aRealTimePacket.Pulse1;
-                if (pulseraw < MinPulseSeen)
-                {
-                    MinPulseSeen = pulseraw;
-                }
-                int pulseoffset = pulseraw - MinPulseSeen;
-                if (pulseoffset > MaxPulseSeen)
-                {
-                    MaxPulseSeen = pulseoffset;
-                    PulseScale = 100.0 / MaxPulseSeen;
-                }
-                int pulsescaled = (int)(PulseScale * pulseoffset);
-                Logger.Log("Plotting pulse: pulseraw " + pulseraw + ", pulsescaled " + pulsescaled + ", PulseScale " + PulseScale + ", MaxPulseSeen " + MaxPulseSeen +
-                    ", MinPulseSeen " + MinPulseSeen + ", pulseoffset " + pulseoffset, 2);
-                if (pulsescaled < 100 && pulsescaled > 0)
-                    AddPoint(pulsescaled, PulsePlotter);
+                uiPlotQueue.Enqueue(p);
             }
-            PulsePlotter.aPlotSurface2D.Refresh();
+
+            // Cap the queue if the device sends faster than 60Hz to maintain real-time
+            while (uiPlotQueue.Count > 15)
+            {
+                lastPlottedPacket = uiPlotQueue.Dequeue();
+            }
+
+            // Protect against timer pauses
+            if (nextPlotTime == DateTime.MinValue || (DateTime.Now - nextPlotTime).TotalMilliseconds > 200)
+            {
+                nextPlotTime = DateTime.Now;
+            }
+
+            bool addedAny = false;
+            while (DateTime.Now >= nextPlotTime)
+            {
+                nextPlotTime = nextPlotTime.AddMilliseconds(16.666);
+                
+                if (uiPlotQueue.Count > 0)
+                {
+                    lastPlottedPacket = uiPlotQueue.Dequeue();
+                }
+
+                if (lastPlottedPacket != null)
+                {
+                    int pulseraw = lastPlottedPacket.Pulse1;
+                    if (pulseraw < MinPulseSeen) MinPulseSeen = pulseraw;
+                    int pulseoffset = pulseraw - MinPulseSeen;
+                    if (pulseoffset > MaxPulseSeen)
+                    {
+                        MaxPulseSeen = pulseoffset;
+                        PulseScale = MaxPulseSeen > 0 ? 100.0 / MaxPulseSeen : 1.0;
+                    }
+                    int pulsescaled = (int)(PulseScale * pulseoffset);
+                    if (pulsescaled <= 100 && pulsescaled >= 0)
+                    {
+                        AddPoint(pulsescaled, PulsePlotter);
+                        addedAny = true;
+                    }
+                }
+            }
+
+            if (addedAny)
+            {
+                PulsePlotter.aPlotSurface2D.Refresh();
+            }
         }
 
         private void CalculateHTi(RealTimePacket aRealPacket, bool overrideTimer)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -28,7 +28,12 @@ namespace HypoxicTimer
             {
                 ComPortBox.Items.Add(port);
             }
+            if (ComPortBox.Items.Count > 0 && string.IsNullOrEmpty(ComPortBox.Text))
+            {
+                ComPortBox.SelectedIndex = 0;
+            }
             UpdateDisplay();
+            UpdateOximeterVisibility();
         }
 
         public int DebugLevel { get { return (int)DebugUpDown.Value; } }
@@ -137,6 +142,18 @@ namespace HypoxicTimer
             SoundOpenFileDialog.FileName = EndRecovery.Text;
             if (SoundOpenFileDialog.ShowDialog() == DialogResult.OK)
                 EndRecovery.Text = SoundOpenFileDialog.FileName;
+        }
+
+        private void OximeterTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateOximeterVisibility();
+        }
+
+        private void UpdateOximeterVisibility()
+        {
+            bool isHid = OximeterType == "CMS 50E (HID)";
+            ComPortBox.Visible = !isHid;
+            label4.Visible = !isHid;
         }
     }
 }

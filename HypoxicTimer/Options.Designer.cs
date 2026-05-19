@@ -1,4 +1,4 @@
-﻿namespace HypoxicTimer
+namespace HypoxicTimer
 {
     partial class Options
     {
@@ -396,12 +396,14 @@
             this.OximeterTypeComboBox.FormattingEnabled = true;
             this.OximeterTypeComboBox.Items.AddRange(new object[] {
             "CMS 50E",
-            "CMS 60C"});
+            "CMS 60C",
+            "CMS 50E (HID)"});
             this.OximeterTypeComboBox.Location = new System.Drawing.Point(110, 427);
             this.OximeterTypeComboBox.Name = "OximeterTypeComboBox";
             this.OximeterTypeComboBox.Size = new System.Drawing.Size(121, 21);
             this.OximeterTypeComboBox.TabIndex = 46;
             this.OximeterTypeComboBox.Text = global::HypoxicTimer.Properties.Settings.Default.OximeterType;
+            this.OximeterTypeComboBox.SelectedIndexChanged += new System.EventHandler(this.OximeterTypeComboBox_SelectedIndexChanged);
             // 
             // firstSessionBox
             // 
